@@ -1,0 +1,23 @@
+services:
+  wallos:
+    image: bellamy/wallos:5.5.0
+    restart: unless-stopped
+    volumes:
+      - wallos-db:/var/www/html/db
+      - wallos-logos:/var/www/html/images/uploads/logos
+  wallos-mcp:
+    build: .
+    restart: unless-stopped
+    environment:
+      WALLOS_BASE_URL: ${WALLOS_BASE_URL:?Set WALLOS_BASE_URL}
+      WALLOS_API_KEY: ${WALLOS_API_KEY:?Set WALLOS_API_KEY}
+      MCP_AUTH_TOKEN: ${MCP_AUTH_TOKEN:?Set MCP_AUTH_TOKEN}
+      MCP_PORT: ${MCP_PORT:-3000}
+    depends_on:
+      - wallos
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+volumes:
+  wallos-db:
+  wallos-logos:

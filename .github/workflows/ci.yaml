@@ -1,0 +1,26 @@
+name: Verify
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck && npm run lint && npm test && npm run build
+      - run: docker compose -f compose.example.yaml --env-file .env.example config --quiet
+      - run: docker build -t wallos-mcp:test .
+      - name: Container smoke test
+        run: |
+          docker run -d --name mcp --env-file .env.example -p 127.0.0.1:3000:3000 wallos-mcp:test
+          trap 'docker rm -f mcp' EXIT
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/healthz; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:3000/healthz
+          test "$(docker exec mcp id -u)" != 0
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:3000/mcp)" = 401
