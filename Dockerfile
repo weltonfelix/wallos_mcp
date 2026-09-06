@@ -1,10 +1,10 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY tsconfig*.json ./
 COPY src ./src
-RUN npm run build && npm prune --omit=dev
+RUN npm run build && npm prune --omit=dev --ignore-scripts
 
 FROM node:22-alpine
 ENV NODE_ENV=production MCP_PORT=3000
