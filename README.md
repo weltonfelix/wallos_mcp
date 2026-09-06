@@ -55,6 +55,23 @@ For an existing Wallos stack, copy only the `wallos-mcp` service, remove or adap
 
 The image runs as a non-root user and supports a read-only filesystem. `/healthz` is a public liveness endpoint and Docker health check; it does **not** verify Wallos connectivity or credentials. No database or persistent volume is needed for MCP.
 
+### Publishing to GHCR
+
+The `Publish Docker image` workflow publishes multi-platform images for `linux/amd64` and `linux/arm64` when a semantic version tag such as `v1.0.0` is pushed. It runs the typecheck, lint, tests, build, and Compose validation first. The workflow uses the repository's built-in `GITHUB_TOKEN`; enable repository Actions and package write permissions if the repository settings require it.
+
+```sh
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+The resulting image is published as `ghcr.io/<owner>/<repository>:1.0.0` and `ghcr.io/<owner>/<repository>:latest`, with an immutable SHA tag and provenance/SBOM metadata. Pull it with:
+
+```sh
+docker pull ghcr.io/<owner>/<repository>:1.0.0
+```
+
+For a private package, authenticate the deployment host to `ghcr.io` with a token that has package read access. For a public package, no registry login is needed to pull the image.
+
 ## Connect an MCP client
 
 Configure a Streamable HTTP connection with:
